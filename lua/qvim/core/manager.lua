@@ -5,14 +5,11 @@ local utils = require("qvim.utils")
 local join_paths = utils.join_paths
 local fmt = string.format
 
-local get_qvim_config_dir = _G.get_qvim_config_dir
-
-local plugins_dir =
-	join_paths(get_qvim_data_dir(), "after", "pack", "lazy", "opt")
+local plugins_dir = get_qvim_pack_dir()
 
 local function ensure_plugins_in_rtp(lazy_install_dir)
 	local rtp = vim.opt.rtp:get()
-	local base_dir = get_qvim_data_dir():gsub("\\", "/")
+	local base_dir = get_lazy_rtp_dir():gsub("\\", "/")
 	local idx_base = #rtp + 1
 	for i, path in ipairs(rtp) do
 		path = path:gsub("\\", "/")
@@ -42,7 +39,7 @@ function manager:init(opts)
 
 	if not utils.is_directory(lazy_install_dir) then
 		print("Initializing first time setup")
-		local core_plugins_dir = join_paths(get_qvim_config_dir(), "plugins")
+		local core_plugins_dir = join_paths(get_qvim_state_dir(), "plugins")
 		if utils.is_directory(core_plugins_dir) then
 			vim.fn.mkdir(plugins_dir, "p")
 			vim.loop.fs_rmdir(plugins_dir)
@@ -57,7 +54,7 @@ function manager:init(opts)
 				lazy_install_dir,
 			})
 			local default_snapshot_path =
-				join_paths(get_qvim_config_dir(), "snapshots", "default.json")
+				join_paths(get_qvim_rtp_dir(), "snapshots", "default.json")
 			local snapshot = assert(
 				vim.fn.json_decode(vim.fn.readfile(default_snapshot_path))
 			)
@@ -113,14 +110,15 @@ function manager:load(spec)
 			git = {
 				timeout = 120,
 			},
-			lockfile = join_paths(get_qvim_config_dir(), "lazy-lock.json"),
+			-- TODO I'm not exactly sure about this location
+			lockfile = join_paths(get_qvim_rtp_dir(), "lazy-lock.json"),
 			performance = {
 				rtp = {
-					reset = true,
+					reset = false,
 				},
 			},
 			readme = {
-				root = join_paths(get_qvim_config_dir(), "lazy", "readme"),
+				root = join_paths(get_qvim_rtp_dir(), "lazy", "readme"),
 			},
 		}
 
